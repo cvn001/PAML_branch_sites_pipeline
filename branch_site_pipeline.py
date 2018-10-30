@@ -107,14 +107,14 @@ def run_codeml(mark_id, aln_file, tree_file, sleep):
     ps = tree.get_most_likely('bsA.' + str(mark_id), 'bsA1.' + str(mark_id))
     rx = tree.get_most_likely('bsA1.' + str(mark_id), 'M0')
     bsA = tree.get_evol_model('bsA.' + str(mark_id))
-    pwfg2a = bsA.classes['proportions'][2]
+    p_bsA = bsA.classes['proportions'][2]
     wfrg2a = bsA.classes['foreground w'][2]
     if ps < 0.05 and float(wfrg2a) > 1:
-        result = [mark_id, ps, rx, pwfg2a, 'positive selection']
+        result = [mark_id, ps, rx, p_bsA, 'positive selection']
     elif rx < 0.05 and ps >= 0.05:
-        result = [mark_id, ps, rx, pwfg2a, 'relaxation']
+        result = [mark_id, ps, rx, p_bsA, 'relaxation']
     else:
-        result = [mark_id, ps, rx, pwfg2a, 'no signal']
+        result = [mark_id, ps, rx, p_bsA, 'no signal']
     return result
 
 
