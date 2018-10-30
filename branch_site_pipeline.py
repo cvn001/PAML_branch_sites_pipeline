@@ -38,7 +38,8 @@ def last_exception():
     """ Returns last exception as a string, or use in logging.
     """
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    return ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    exc_info = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    return exc_info
 
 
 def load_parameters():
@@ -93,7 +94,7 @@ def load_parameters():
 
 def run_codeml(mark_id, aln_file, tree_file, sleep):
     logger.info('sub-process: {0}'.format(str(mark_id)))
-    time.sleep(round(sleep / args.threads, 3))
+    time.sleep(round(sleep / args.threads, 2))
     run_dir = os.path.join(output_dir, str(mark_id))
     os.makedirs(run_dir)
     tree = EvolTree(tree_file, format=0)
@@ -123,15 +124,15 @@ def main():
     all_results = []
     for i in run_list:
         result = p.apply_async(run_codeml, args=[i, aln_file, tree_file, run_list.index(i)])
-        # result = run_codeml(i, aln_file, tree_file)
         all_results.append(result)
     p.close()
     p.join()
     result_file = os.path.join(output_dir, 'all_results.txt')
     with open(result_file, 'w') as f:
+        header = 'id: positive_p-value relaxation_p-value signal\n'
+        f.write(header)
         for m in all_results:
             m_list = m.get()
-            # m_list = m
             mark_id = m_list[0]
             ps = m_list[1]
             rx = m_list[2]
