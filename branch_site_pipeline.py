@@ -107,13 +107,14 @@ def run_codeml(mark_id, aln_file, tree_file, sleep):
     ps = tree.get_most_likely('bsA.' + str(mark_id), 'bsA1.' + str(mark_id))
     rx = tree.get_most_likely('bsA1.' + str(mark_id), 'M0')
     bsA = tree.get_evol_model('bsA.' + str(mark_id))
+    pwfg2a = bsA.classes['proportions'][2]
     wfrg2a = bsA.classes['foreground w'][2]
     if ps < 0.05 and float(wfrg2a) > 1:
-        result = [mark_id, ps, rx, 'positive selection']
+        result = [mark_id, ps, rx, pwfg2a, 'positive selection']
     elif rx < 0.05 and ps >= 0.05:
-        result = [mark_id, ps, rx, 'relaxation']
+        result = [mark_id, ps, rx, pwfg2a, 'relaxation']
     else:
-        result = [mark_id, ps, rx, 'no signal']
+        result = [mark_id, ps, rx, pwfg2a, 'no signal']
     return result
 
 
@@ -129,20 +130,22 @@ def main():
     p.join()
     result_file = os.path.join(output_dir, 'all_results.txt')
     with open(result_file, 'w') as f:
-        header = 'id: positive_p-value relaxation_p-value signal\n'
+        header = 'id: positive_p-value relaxation_p-value ps_proportion signal\n'
         f.write(header)
         for m in all_results:
             m_list = m.get()
             mark_id = m_list[0]
             ps = m_list[1]
             rx = m_list[2]
-            selection = m_list[3]
+            proportion = m_list[3]
+            selection = m_list[4]
             descendant = descendant_dict[mark_id]
-            result_line = '{0}: {1} {2} {3}{4}\n\n'.format(str(mark_id),
-                                                           str(ps),
-                                                           str(rx),
-                                                           selection,
-                                                           descendant)
+            result_line = '{0}: {1} {2} {3} {4}{5}\n\n'.format(str(mark_id),
+                                                               str(ps),
+                                                               str(rx),
+                                                               proportion,
+                                                               selection,
+                                                               descendant)
             f.write(result_line)
 
 
