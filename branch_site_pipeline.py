@@ -12,7 +12,7 @@ import logging.handlers
 from collections import defaultdict
 from argparse import ArgumentParser
 from multiprocessing import Pool, cpu_count
-from ete3 import EvolTree
+from ete3 import EvolTree, TreeStyle, NodeStyle
 
 
 def parse_cmdline():
@@ -118,6 +118,26 @@ def run_codeml(mark_id, aln_file, tree_file, sleep):
     return result
 
 
+def tree_layout(tree_file, ps_node_list):
+    t = EvolTree(tree_file, format=0)
+    style_other = NodeStyle()
+    style_other['size'] = 6
+    style_ps = NodeStyle()
+    style_ps['fgcolor'] = '#ff0000'
+    style_ps['size'] = 6
+    for node in t.iter_descendants():
+        descendant = t.get_descendant_by_node_id(node.node_id)
+        if node.node_id in ps_node_list:
+            descendant.img_style = style_ps
+        else:
+            descendant.img_style = style_other
+    ts = TreeStyle()
+    ts.show_branch_support = True
+    ts.show_branch_length = False
+    ts.show_leaf_name = True
+    t.render('positive_selection_tree.png', tree_style=ts)
+
+
 def main():
     p = Pool(args.threads)
     (run_list, aln_file, tree_file, descendant_dict) = load_parameters()
@@ -129,6 +149,7 @@ def main():
     p.close()
     p.join()
     result_file = os.path.join(output_dir, 'all_results.txt')
+    ps_node_list = []
     with open(result_file, 'w') as f:
         header = 'id: positive_p-value relaxation_p-value ps_proportion signal\n'
         f.write(header)
@@ -139,6 +160,8 @@ def main():
             rx = m_list[2]
             proportion = m_list[3]
             selection = m_list[4]
+            if selection == 'positive selection':
+                ps_node_list.append(mark_id)
             descendant = descendant_dict[mark_id]
             result_line = '{0}: {1} {2} {3} {4}{5}\n\n'.format(str(mark_id),
                                                                str(ps),
@@ -147,6 +170,7 @@ def main():
                                                                selection,
                                                                descendant)
             f.write(result_line)
+    tree_layout(tree_file, ps_node_list)
 
 
 if __name__ == '__main__':
