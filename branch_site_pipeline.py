@@ -151,7 +151,7 @@ def main():
     result_file = os.path.join(output_dir, 'all_results.txt')
     ps_node_list = []
     with open(result_file, 'w') as f:
-        header = 'id: positive_p-value relaxation_p-value ps_proportion signal\n'
+        header = 'id: selection_p-value relaxation_p-value ps_proportion signal\n'
         f.write(header)
         for m in all_results:
             m_list = m.get()
