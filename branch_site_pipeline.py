@@ -12,7 +12,7 @@ import logging.handlers
 from collections import defaultdict
 from argparse import ArgumentParser
 from multiprocessing import Pool, cpu_count
-from ete3 import EvolTree, TreeStyle, NodeStyle
+from ete3 import EvolTree, TreeStyle, NodeStyle, faces, AttrFace
 
 
 def parse_cmdline():
@@ -118,6 +118,14 @@ def run_codeml(mark_id, aln_file, tree_file, sleep):
     return result
 
 
+def layout(node):
+    name_face = faces.AttrFace("name", fsize=10, fgcolor="#009000")
+    # If node is a leaf, add the node name
+    if node.is_leaf():
+        faces.add_face_to_node(name_face, node, column=0)
+    faces.add_face_to_node(AttrFace("node_id"), node, column=0)
+
+
 def tree_layout(tree_file, ps_node_list):
     t = EvolTree(tree_file, format=0)
     style_other = NodeStyle()
@@ -132,9 +140,10 @@ def tree_layout(tree_file, ps_node_list):
         else:
             descendant.img_style = style_other
     ts = TreeStyle()
-    ts.show_branch_support = True
+    ts.layout_fn = layout
+    ts.show_branch_support = False
     ts.show_branch_length = False
-    ts.show_leaf_name = True
+    ts.show_leaf_name = False
     t.render('positive_selection_tree.png', tree_style=ts)
 
 
