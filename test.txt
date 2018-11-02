@@ -1,6 +1,0 @@
-CYP94_1_XYZ_cds_aln.paml
-rooted_CYP94_1.nwk
-Dzin_337.293
-Drot_01651
-Dzin_196.285
-Dzin_196.288
