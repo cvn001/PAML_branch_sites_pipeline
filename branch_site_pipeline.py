@@ -144,7 +144,8 @@ def tree_layout(tree_file, ps_node_list):
     ts.show_branch_support = False
     ts.show_branch_length = False
     ts.show_leaf_name = False
-    t.render('positive_selection_tree.png', tree_style=ts)
+    result_picture = os.path.join(output_dir, 'positive_selection_tree.png')
+    t.render(result_picture, tree_style=ts)
 
 
 def main():
