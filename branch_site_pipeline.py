@@ -1,6 +1,6 @@
 #!/usr/bin/python
-# -*- coding: UTF-8 -*-
-# Introduction: Automatically test branch-site models to input cDNA alignment and newick format tree
+# Introduction: Automatically test branch-site models to
+# input cDNA alignment and newick format tree
 # Created by Xiangchen Li on 2018/10/27
 
 import os
@@ -21,16 +21,41 @@ def parse_cmdline():
     :return: Input command-line arguments
     """
     parser = ArgumentParser(prog='branch_site_pipeline.py')
-    parser.add_argument('-i', '--input', dest='input_file', action='store', default=None,
-                        help='Input tree nodes file')
-    parser.add_argument('-o', '--output', dest='output_dir', action='store', default='output',
-                        help='Output directory [default output]')
-    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true", default=False,
-                        help="Give verbose output [default False]")
-    parser.add_argument("-l", "--logfile", dest="logfile", action="store", default=None,
-                        help="Logfile location [default None]")
-    parser.add_argument("-t", "--threads", type=int, dest="threads", default=cpu_count(),
-                        help="How many threads will be used? [default all]")
+    parser.add_argument(
+        '-i',
+        '--input',
+        dest='input_file',
+        action='store',
+        default=None,
+        help='Input tree nodes file')
+    parser.add_argument(
+        '-o',
+        '--output',
+        dest='output_dir',
+        action='store',
+        default='output',
+        help='Output directory [default output]')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        action="store_true",
+        default=False,
+        help="Give verbose output [default False]")
+    parser.add_argument(
+        "-l",
+        "--logfile",
+        dest="logfile",
+        action="store",
+        default=None,
+        help="Logfile location [default None]")
+    parser.add_argument(
+        "-t",
+        "--threads",
+        type=int,
+        dest="threads",
+        default=cpu_count(),
+        help="How many threads will be used? [default all]")
     return parser.parse_args()
 
 
@@ -38,7 +63,8 @@ def last_exception():
     """ Returns last exception as a string, or use in logging.
     """
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    exc_info = ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+    exc_info = ''.join(
+        traceback.format_exception(exc_type, exc_value, exc_traceback))
     return exc_info
 
 
@@ -48,7 +74,8 @@ def load_parameters():
         all_lines = f.readlines()
         aln_file = all_lines[0].strip()
         if not os.path.exists(aln_file):
-            logger.error('Input cDNA alignment file does not exist: {0}'.format(aln_file))
+            logger.error('Input cDNA alignment file does not exist: {0}'.
+                         format(aln_file))
             sys.exit(1)
         else:
             logger.info('Input cDNA alignment file: {0}'.format(aln_file))
@@ -88,7 +115,8 @@ def load_parameters():
         run_list = []
         for s in common_ancestor.iter_descendants():
             run_list.append(s.node_id)
-        logger.info('These node ids will be checked: {0}'.format(str(run_list)))
+        logger.info('These node ids will be checked: {0}'.format(
+            str(run_list)))
         return run_list, aln_file, tree_file, descendant_dict
 
 
@@ -151,18 +179,24 @@ def tree_layout(tree_file, ps_node_list):
 def main():
     p = Pool(args.threads)
     (run_list, aln_file, tree_file, descendant_dict) = load_parameters()
-    logger.info('Run all sub-processes in total {0} threads'.format(str(args.threads)))
+    logger.info('Run all sub-processes in total {0} threads'.format(
+        str(args.threads)))
     all_results = []
     for i in run_list:
-        result = p.apply_async(run_codeml, args=[i, aln_file, tree_file, run_list.index(i)])
+        result = p.apply_async(
+            run_codeml, args=[i, aln_file, tree_file,
+                              run_list.index(i)])
         all_results.append(result)
     p.close()
     p.join()
     result_file = os.path.join(output_dir, 'all_results.txt')
     ps_node_list = []
     with open(result_file, 'w') as f:
-        header = 'id: selection_p-value relaxation_p-value ps_proportion signal\n'
-        f.write(header)
+        header = ''.join([
+            'id:', 'selection_p-value', 'relaxation_p-value', 'ps_proportion',
+            'signal'
+        ])
+        f.write(header + '\n')
         for m in all_results:
             m_list = m.get()
             mark_id = m_list[0]
@@ -173,12 +207,9 @@ def main():
             if selection == 'positive selection':
                 ps_node_list.append(mark_id)
             descendant = descendant_dict[mark_id]
-            result_line = '{0}: {1} {2} {3} {4}{5}\n\n'.format(str(mark_id),
-                                                               str(ps),
-                                                               str(rx),
-                                                               proportion,
-                                                               selection,
-                                                               descendant)
+            result_line = '{0}: {1} {2} {3} {4}{5}\n\n'.format(
+                str(mark_id), str(ps), str(rx), proportion, selection,
+                descendant)
             f.write(result_line)
     tree_layout(tree_file, ps_node_list)
 
