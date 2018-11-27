@@ -3,16 +3,17 @@
 # input cDNA alignment and newick format tree
 # Created by Xiangchen Li on 2018/10/27
 
+import logging.handlers
 import os
+import shutil
 import sys
 import time
-import shutil
 import traceback
-import logging.handlers
-from collections import defaultdict
+from Bio import AlignIO
 from argparse import ArgumentParser
+from collections import defaultdict
 from multiprocessing import Pool, cpu_count
-from ete3 import EvolTree, TreeStyle, NodeStyle, faces, AttrFace
+from ete3 import EvolTree, TreeStyle, NodeStyle, faces, AttrFace, Tree
 
 
 def parse_cmdline():
@@ -68,24 +69,51 @@ def last_exception():
     return exc_info
 
 
+def trim_tree(tmp_tree, seq_ids):
+    t = Tree(tmp_tree, format=1)
+    t.prune(seq_ids)
+    result_tree = 'trim_tree.nwk'
+    t.write(outfile=result_tree, format=1)
+    return result_tree
+
+
 def load_parameters():
     descendant_dict = defaultdict()
     with open(input_file, 'r') as f:
         all_lines = f.readlines()
         aln_file = all_lines[0].strip()
         if not os.path.exists(aln_file):
-            logger.error('Input cDNA alignment file does not exist: {0}'.
-                         format(aln_file))
+            logger.error(
+                'Invalid cDNA alignment file: {0}'.format(aln_file))
             sys.exit(1)
-        else:
-            logger.info('Input cDNA alignment file: {0}'.format(aln_file))
+        logger.info('Input cDNA alignment file: {0}'.format(aln_file))
+        seq_id_dict = defaultdict()
+        seq_id_list = []
+        for seq_record in AlignIO.read(aln_file, 'fasta'):
+            seq_id_dict[str(seq_record.id)] = 1
+            seq_id_list.append(str(seq_record.id))
         tree_file = all_lines[1].strip()
         if not os.path.exists(tree_file):
-            logger.error('Input tree file does not exist', tree_file)
+            logger.error(
+                'Invalid tree file: {0}'.format(tree_file))
             sys.exit(1)
-        else:
-            logger.info('Input tree file: {0}'.format(tree_file))
-        t = EvolTree(tree_file, format=0)
+        logger.info('Input tree file: {0}'.format(tree_file))
+        tmp_t = Tree(tree_file, format=0)
+        node_id_dict = defaultdict()
+        for node in tmp_t:
+            node_id_dict[str(node.name)] = 1
+        if seq_id_dict != node_id_dict:
+            if len(seq_id_dict) < len(node_id_dict):
+                logger.warning(
+                    'Sequences is less than tree nodes.')
+                logger.info('Trim input tree file.')
+                tree_file = trim_tree(tree_file, seq_id_list)
+            else:
+                logger.error(
+                    'Sequences is falsely greater than tree nodes.'
+                )
+                sys.exit(1)
+        t = EvolTree(tree_file, format=1)
         for descendant in t.iter_descendants():
             descendant_dict[descendant.node_id] = str(descendant)
         root = t.get_tree_root()
@@ -106,7 +134,7 @@ def load_parameters():
                     logger.error('Error node: {0}'.format(node))
                     sys.exit(1)
             if not t.check_monophyly(values=select_nodes, target_attr='name'):
-                logger.error('Some nodes are not monophyletic, please check')
+                logger.error('Some nodes are not monophyletic.')
                 sys.exit(1)
             common_ancestor = t.get_common_ancestor(select_nodes)
         else:
