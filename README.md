@@ -10,7 +10,7 @@ You can get a summary of available command-line options with `branch_site_pipeli
 $ python branch_site_pipeline.py -h
 usage: branch_site_pipeline.py [-h] [-i INPUT_FILE] [-o OUTPUT_DIR] [-v]
                                [-l LOGFILE] [-t THREADS]
-[…]
+[...]
 ```
 ### Input
 You need to prepare a text file including these information:
