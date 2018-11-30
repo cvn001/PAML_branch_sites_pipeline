@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Introduction: Automatically test branch-site models to
-# input cDNA alignment and newick format tree
+# input cDNA alignment and newick format tree.
 # Created by Xiangchen Li on 2018/10/27
 
 import logging.handlers
